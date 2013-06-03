@@ -2,7 +2,7 @@ import "cartesian";
 import "stream";
 
 function d3_geo_resample(project) {
-  var δ2 = .5, // precision, px²
+  var minArea = 4, // precision area threshold in px²
       maxDepth = 16;
 
   function resample(stream) {
@@ -68,10 +68,10 @@ function d3_geo_resample(project) {
   }
 
   function resampleLineTo(x0, y0, λ0, a0, b0, c0, x1, y1, λ1, a1, b1, c1, depth, buffer) {
-    var dx = x1 - x0,
-        dy = y1 - y0,
-        d2 = dx * dx + dy * dy;
-    if (d2 > 4 * δ2 && depth--) {
+    var x01 = x1 - x0,
+        y01 = y1 - y0,
+        d1 = x01 * x01 + y01 * y01; // linear distance
+    if (d1 > 4 * minArea && depth--) {
       var a = a0 + a1,
           b = b0 + b1,
           c = c0 + c1,
@@ -81,11 +81,14 @@ function d3_geo_resample(project) {
           p = project(λ2, φ2),
           x2 = p[0],
           y2 = p[1],
-          dx2 = x2 - x0,
-          dy2 = y2 - y0,
-          dz = dy * dx2 - dx * dy2,
+          x02 = x0 - x2,
+          y02 = y0 - y2,
+          // dz = y01 * x02 - x01 * y02,
+          d2 = Math.abs(x02 * y01 - x01 * y02), // area
           tooFar = false;
-      if (dz * dz / d2 > δ2 || Math.abs((dx * dx2 + dy * dy2) / d2 - .5) > .3 || (tooFar = dx2 * dx2 + dy2 * dy2 > 256 * δ2)) {
+      if (d2 > minArea // resample if the perpendicular distance is large
+          // || Math.abs((x01 * x02 + y01 * y02) / d1 - .5) > .3 // or the midpoint is close to either endpoint
+          || (tooFar = x02 * x02 + y02 * y02 > 256 * minArea)) { // lookahead if the distance between projected points is large
         var s0 = resampleLineTo(x0, y0, λ0, a0, b0, c0, x2, y2, λ2, a /= m, b /= m, c, depth, buffer);
         buffer.push(p);
         var s1 = resampleLineTo(x2, y2, λ2, a, b, c, x1, y1, λ1, a1, b1, c1, depth, buffer);
@@ -95,8 +98,8 @@ function d3_geo_resample(project) {
   }
 
   resample.precision = function(_) {
-    if (!arguments.length) return Math.sqrt(δ2);
-    maxDepth = (δ2 = _ * _) > 0 && 16;
+    if (!arguments.length) return minArea;
+    maxDepth = (minArea = +_) > 0 && 16;
     return resample;
   };
 
