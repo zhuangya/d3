@@ -3359,11 +3359,23 @@ d3 = function() {
     function resampleLineTo(x0, y0, λ0, a0, b0, c0, x1, y1, λ1, a1, b1, c1, depth, stream) {
       var dx = x1 - x0, dy = y1 - y0, d2 = dx * dx + dy * dy;
       if (d2 > 4 * δ2 && depth--) {
-        var a = a0 + a1, b = b0 + b1, c = c0 + c1, m = Math.sqrt(a * a + b * b + c * c), φ2 = Math.asin(c /= m), λ2 = Math.abs(Math.abs(c) - 1) < ε ? (λ0 + λ1) / 2 : Math.atan2(b, a), p = project(λ2, φ2), x2 = p[0], y2 = p[1], dx2 = x2 - x0, dy2 = y2 - y0, dz = dy * dx2 - dx * dy2;
-        if (dz * dz / d2 > δ2 || Math.abs((dx * dx2 + dy * dy2) / d2 - .5) > .3) {
-          resampleLineTo(x0, y0, λ0, a0, b0, c0, x2, y2, λ2, a /= m, b /= m, c, depth, stream);
+        var a2 = 2 * a0 + a1, b2 = 2 * b0 + b1, c2 = 2 * c0 + c1, a3 = a0 + a1 * 2, b3 = b0 + b1 * 2, c3 = c0 + c1 * 2, m2 = Math.sqrt(a2 * a2 + b2 * b2 + c2 * c2), m3 = Math.sqrt(a3 * a3 + b3 * b3 + c3 * c3), φ2 = Math.asin(c2 /= m2), φ3 = Math.asin(c3 /= m3), λ2 = Math.abs(Math.abs(c2) - 1) < ε ? (λ0 * 2 + λ1) / 3 : Math.atan2(b2, a2), λ3 = Math.abs(Math.abs(c3) - 1) < ε ? (λ0 + λ1 * 2) / 3 : Math.atan2(b3, a3), p2 = project(λ2, φ2), p3 = project(λ3, φ3), x2 = p2[0], y2 = p2[1], x3 = p3[0], y3 = p3[1], dx2 = x2 - x0, dy2 = y2 - y0, dx3 = x3 - x0, dy3 = y3 - y0, dz2 = dy * dx2 - dx * dy2, dz3 = dy * dx3 - dx * dy3, r2 = dz2 * dz2 / d2 > δ2 || Math.abs((dx * dx2 + dy * dy2) / d2 - .5) > .3, r3 = dz3 * dz3 / d2 > δ2 || Math.abs((dx * dx3 + dy * dy3) / d2 - .5) > .3;
+        a2 /= m2, b2 /= m2;
+        a3 /= m3, b3 /= m3;
+        if (r2 && r3) {
+          resampleLineTo(x0, y0, λ0, a0, b0, c0, x2, y2, λ2, a2, b2, c2, depth, stream);
           stream.point(x2, y2);
-          resampleLineTo(x2, y2, λ2, a, b, c, x1, y1, λ1, a1, b1, c1, depth, stream);
+          resampleLineTo(x2, y2, λ2, a2, b2, c2, x3, y3, λ3, a3, b3, c3, depth, stream);
+          stream.point(x3, y3);
+          resampleLineTo(x3, y3, λ3, a3, b3, c3, x1, y1, λ1, a1, b1, c1, depth, stream);
+        } else if (r2) {
+          resampleLineTo(x0, y0, λ0, a0, b0, c0, x2, y2, λ2, a2, b2, c2, depth, stream);
+          stream.point(x2, y2);
+          resampleLineTo(x2, y2, λ2, a2, b2, c2, x1, y1, λ1, a1, b1, c1, depth, stream);
+        } else if (r3) {
+          resampleLineTo(x0, y0, λ0, a0, b0, c0, x3, y3, λ3, a3, b3, c3, depth, stream);
+          stream.point(x3, y3);
+          resampleLineTo(x3, y3, λ3, a3, b3, c3, x1, y1, λ1, a1, b1, c1, depth, stream);
         }
       }
     }
