@@ -290,8 +290,7 @@ suite.addBatch({
         assert.inDelta(area, 124884.274, 1e-3);
       },
       "bounds of a line string": function(p) {
-        assert.inDelta(p.bounds({type: "LineString", coordinates: [[-122, 37], [-74, 40], [-100, 0]]}),
-          [[109.378, 189.584], [797.758, 504.660]], 1e-3);
+        assert.inDelta(p.bounds({type: "LineString", coordinates: [[-122, 37], [-74, 40], [-100, 0]]}), [[109.378, 189.584], [797.758, 504.660]], 1e-3);
       },
       "centroid of a line string": function(p) {
         assert.inDelta(p.centroid({type: "LineString", coordinates: [[-122, 37], [-74, 40], [-100, 0]]}), [545.131, 253.860], 1e-3);
